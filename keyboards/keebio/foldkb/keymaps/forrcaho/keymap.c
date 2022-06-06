@@ -294,6 +294,9 @@ layer_state_t layer_state_set_user(layer_state_t state) {
         case _PG:
             backlight_level(3);
             break;
+        case _PG:
+            backlight_level(2);
+            break;
         default:
             backlight_level(2);
             break;
