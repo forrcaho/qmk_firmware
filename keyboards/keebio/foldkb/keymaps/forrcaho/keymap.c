@@ -1,4 +1,4 @@
-/* Copyright 2022 Forrest Cahoon <forrest.cahoon@gmail.com>
+/* Copyright 2023 Forrest Cahoon <forrest.cahoon@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,7 +28,8 @@ enum layer {
 };
 
 enum custom_keycodes {
-    PG_ARRO = SAFE_RANGE,
+    PG_AMP = SAFE_RANGE,
+    PG_ARRO,
     PG_STAR,
     PG_ENDC,
     PG_EQEQ,
@@ -56,18 +57,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // ├────────┼┴┴┴┴─────────────┼────────┼────────┼────────┼────────┼────────┤        ├────────┼────────┼────────┼────────┼────────┼────────┴────┬────────┬───┘
     TG(_PG), KC_LSFT,          KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,             KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,      MO(_PG),
 // ├────────┼┬┬┬┬──────────┬──┴──────┬─┴────────┼────────┼────────┼────────┤        ├────────┴─┬──────┴──────┬─┴────────┼────────┴─┬─────────┬─┴────────┤
-    TG(_MC),     KC_LGUI,   KC_LCTL,  KC_LALT,   MO(_PG), KC_SPC,  KC_SPC,           KC_SPC,    KC_SPC,       MO(_PG),   KC_RALT,   KC_RCTL,  KC_RGUI
+    TG(_MC),     KC_LGUI,   KC_LCTL,  KC_LALT,   MO(_PG), KC_SPC,  KC_SPC,           KC_SPC,    KC_SPC,       KC_RALT,   KC_RCTL,   MO(_PG),  KC_RGUI
 // └────────┴┴┴┴┴──────────┴─────────┴──────────┴────────┴────────┴────────┘        └──────────┴─────────────┴──────────┴──────────┴─────────┴──────────┘
   ),
   [_PG] = LAYOUT(
 // ┌────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┐        ┌────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┐
     KC_MUTE, RESET,   _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,            KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_DEL,
 // ├────────┼┬┬┬┬────┴────────┼────────┼────────┼────────┼────────┼────────┤        ├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-    _______,     _______,      _______, PG_SLAS, PG_LPAR, PG_RPAR, PG_NEEQ,          _______, KC_HOME, KC_UP,   KC_PGUP, KC_INS,  _______, _______, _______,
+    _______,     _______,      _______, PG_AMP,  PG_LPAR, PG_RPAR, PG_NEEQ,          _______, KC_HOME, KC_UP,   KC_PGUP, KC_INS,  _______, _______, _______,
 // ├────────┼┼┼┼┼─────────────┼────────┼────────┼────────┼────────┼────────┤        ├────────┼────────┼────────┼────────┼────────┼────────┼────────┴────────┤
     _______,     _______,      PG_ENDC, PG_VBAR, PG_LBRK, PG_RBRK, PG_EQEQ,          _______, KC_LEFT, KC_DOWN, KC_RGHT, _______, _______, KC_BSPC,
 // ├────────┼┴┴┴┴─────────────┼────────┼────────┼────────┼────────┼────────┤        ├────────┼────────┼────────┼────────┼────────┼────────┴────┬────────┬───┘
-    _______, _______,          _______, PG_MINS, PG_EQL,  PG_STAR, PG_ARRO,          _______, KC_END,  KC_DOWN, KC_PGDN, KC_DEL,  _______,      _______,
+    _______, _______,          PG_MINS, PG_SLAS, PG_EQL,  PG_STAR, PG_ARRO,          _______, KC_END,  KC_DOWN, KC_PGDN, KC_DEL,  _______,      _______,
 // ├────────┼┬┬┬┬──────────┬──┴──────┬─┴────────┼────────┼────────┼────────┤        ├────────┴─┬──────┴──────┬─┴────────┼────────┴─┬─────────┬─┴────────┤
     _______,     _______,   _______,  _______,   _______, _______, _______,          _______,   _______,      _______,   _______,   _______,  _______
 // └────────┴┴┴┴┴──────────┴─────────┴──────────┴────────┴────────┴────────┘        └──────────┴─────────────┴──────────┴──────────┴─────────┴──────────┘
@@ -139,6 +140,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     // In this case, we want to continue processing
                     return true;
                 }
+            }
+            break;
+        case PG_AMP:
+            if (record->event.pressed) {
+                clear_mods();
+                clear_oneshot_mods();
+                if (!ctrl_on) SEND_STRING(" ");
+                shift_on ? SEND_STRING("&") : SEND_STRING("&&");
+                if (!ctrl_on) SEND_STRING(" ");
+                set_mods(std_mods);
+                set_oneshot_mods(oneshot_mods);
+                return false;
             }
             break;
         case PG_ARRO:
@@ -230,7 +243,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 clear_mods();
                 clear_oneshot_mods();
                 if (!ctrl_on) SEND_STRING(" ");
-                shift_on ? SEND_STRING("&") : SEND_STRING("|");
+                shift_on ? SEND_STRING("|") : SEND_STRING("||");
                 if (!ctrl_on) SEND_STRING(" ");
                 set_mods(std_mods);
                 set_oneshot_mods(oneshot_mods);
@@ -271,18 +284,21 @@ void housekeeping_task_user(void) {
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
         case _MC:
-            backlight_level(1);
+            backlight_level(3);
+            breathing_enable();
             break;
         case _PG:
+            breathing_disable();
             backlight_level(3);
             break;
         default:
-            backlight_level(2);
+            breathing_disable();
+            backlight_level(1);
             break;
     }
     return state;
 }
 
 void keyboard_post_init(void) {
-    backlight_level(2);
+    backlight_level(1);
 }
