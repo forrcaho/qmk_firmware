@@ -14,7 +14,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 // Milliseconds the backlight is off (or on) when blinking to show
 // caps lock is on. In other words, half the time of a full blink cycle.
 #define CAPS_LOCK_BLINK_MS 350
@@ -55,14 +54,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // ├────────┼┼┼┼┼─────────────┼────────┼────────┼────────┼────────┼────────┤        ├────────┼────────┼────────┼────────┼────────┼────────┼────────┴────────┤
     _______,     KC_CAPS,      KC_A,    KC_S,    KC_D,    KC_F,    KC_G,             KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT, KC_ENT,
 // ├────────┼┴┴┴┴─────────────┼────────┼────────┼────────┼────────┼────────┤        ├────────┼────────┼────────┼────────┼────────┼────────┴────┬────────┬───┘
-    TG(_PG), KC_LSFT,          KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,             KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,      MO(_PG),
+    TG(_PG), KC_LSFT,          KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,             KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,      KC_SCRL,
 // ├────────┼┬┬┬┬──────────┬──┴──────┬─┴────────┼────────┼────────┼────────┤        ├────────┴─┬──────┴──────┬─┴────────┼────────┴─┬─────────┬─┴────────┤
-    TG(_MC),     KC_LGUI,   KC_LCTL,  KC_LALT,   MO(_PG), KC_SPC,  KC_SPC,           KC_SPC,    KC_SPC,       KC_RALT,   KC_RCTL,   MO(_PG),  KC_RGUI
+    TG(_MC),     KC_LGUI,   KC_LCTL,  KC_LALT,   MO(_PG), KC_SPC,  KC_SPC,           KC_SPC,    MO(_PG),      KC_RALT,   KC_RCTL,   MO(_PG),  KC_RGUI
 // └────────┴┴┴┴┴──────────┴─────────┴──────────┴────────┴────────┴────────┘        └──────────┴─────────────┴──────────┴──────────┴─────────┴──────────┘
   ),
   [_PG] = LAYOUT(
 // ┌────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┐        ┌────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┐
-    KC_MUTE, RESET,   _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,            KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_DEL,
+    KC_MUTE, _______, _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,            KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_DEL,
 // ├────────┼┬┬┬┬────┴────────┼────────┼────────┼────────┼────────┼────────┤        ├────────┼────────┼────────┼────────┼────────┼────────┼────────┼────────┤
     _______,     _______,      _______, PG_AMP,  PG_LPAR, PG_RPAR, PG_NEEQ,          _______, KC_HOME, KC_UP,   KC_PGUP, KC_INS,  _______, _______, _______,
 // ├────────┼┼┼┼┼─────────────┼────────┼────────┼────────┼────────┼────────┤        ├────────┼────────┼────────┼────────┼────────┼────────┼────────┴────────┤
@@ -254,12 +253,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-// I have only one encoder on my FoldKB and I want it to always be a scroll wheel.
+// I have only one encoder on my FoldKB, so there's no detection of which encoder is used here.
+// When _PG mode is on, the encoder switches Windows desktops. Otherwise, it acts as a scroll wheel.
 bool encoder_update_user(uint8_t index, bool clockwise) {
-    if (clockwise) {
-        tap_code(KC_MS_WH_DOWN);
+    if (IS_LAYER_ON(_PG)) {
+        if (clockwise) {
+            tap_code16(LCTL(LGUI(KC_RIGHT)));
+        } else {
+            tap_code16(LCTL(LGUI(KC_LEFT)));
+        }
+
     } else {
-        tap_code(KC_MS_WH_UP);
+        if (clockwise) {
+            tap_code(KC_MS_WH_DOWN);
+        } else {
+            tap_code(KC_MS_WH_UP);
+        }
     }
     return false;
 }
@@ -273,7 +282,7 @@ static uint16_t caps_lock_blink_timer = 0;
 void housekeeping_task_user(void) {
     if (host_keyboard_led_state().caps_lock) {
         if (timer_elapsed(caps_lock_blink_timer) >= CAPS_LOCK_BLINK_MS) {
-             backlight_toggle();
+            backlight_toggle();
             caps_lock_blink_timer = timer_read();
         }
     }
